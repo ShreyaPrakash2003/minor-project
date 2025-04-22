@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot - Secure Monitor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+      body {
+        background: linear-gradient(135deg, #000000, #7cc639);
+        color: #5c6358;
+        min-height: 100vh;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      h1 {
+        font-size: 3rem;
+        color: #7cc639;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-out;
+      }
+      .chat-container {
+        width: 100%;
+        max-width: 600px;
+        background: #d9dad7;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        animation: fadeInUp 1s ease-out;
+      }
+      h2 {
+        font-size: 1.8rem;
+        color: #7cc639;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      #chatbox {
+        height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #2e3529;
+        border-radius: 8px;
+        margin-bottom: 15px;
+      }
+      .message {
+        padding: 8px 12px;
+        margin: 5px 0;
+        border-radius: 15px;
+        max-width: 80%;
+        animation: slideIn 0.3s ease-out;
+      }
+      .message.user {
+        background: #5c6358;
+        color: #d9dad7;
+        margin-left: auto;
+        text-align: right;
+      }
+      .message.bot {
+        background: #7cc639;
+        color: #1a1f16;
+        margin-right: auto;
+      }
+      .message .timestamp {
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-top: 2px;
+      }
+      .chat-input {
+        display: flex;
+        gap: 10px;
+      }
+      #chatInput {
+        flex: 1;
+        padding: 10px;
+        font-size: 1rem;
+        border: 2px solid #5c6358;
+        border-radius: 8px;
+        background: #d9dad7;
+        color: #5c6358;
+      }
+      #chatInput:focus {
+        outline: none;
+        border-color: #7cc639;
+        box-shadow: 0 0 5px rgba(124, 198, 57, 0.3);
+      }
+      .chat-input button {
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        background: #7cc639;
+        color: #1a1f16;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .chat-input button:hover {
+        background: #6baf32;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124, 198, 57, 0.4);
+      }
+      .loading {
+        display: none;
+        font-size: 0.9rem;
+        color: #7cc639;
+        margin-top: 5px;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .logout {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        background: #7cc639;
+        color: #1a1f16;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+      .logout:hover {
+        background: #6baf32;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124, 198, 57, 0.4);
+      }
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 2rem;
+        }
+        .chat-container {
+          padding: 15px;
+          max-width: 90%;
+        }
+        #chatInput,
+        .chat-input button {
+          font-size: 0.9rem;
+          padding: 8px;
+        }
+      }
+      .blocked-ips-container {
+        width: 100%;
+        max-width: 600px;
+        background: #d9dad7;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+        animation: fadeInUp 1s ease-out;
+      }
+      .blocked-ips-container h2 {
+        font-size: 1.8rem;
+        color: #7cc639;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      #blocked-ips-list {
+        padding: 10px;
+        background: #2e3529;
+        border-radius: 8px;
+      }
+      .blocked-ip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: #5c6358;
+        color: #d9dad7;
+        border-radius: 15px;
+      }
+      .blocked-ip button {
+        padding: 5px 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        background: #7cc639;
+        color: #1a1f16;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .blocked-ip button:hover {
+        background: #6baf32;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124, 198, 57, 0.4);
+      }
+      .model-management-container {
+        width: 100%;
+        max-width: 600px;
+        background: #d9dad7;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+        animation: fadeInUp 1s ease-out;
+      }
+      .model-management-container h2 {
+        font-size: 1.8rem;
+        color: #7cc639;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      #modelUploadForm,
+      #model-metrics {
+        margin-bottom: 15px;
+      }
+      #modelUploadForm input[type="file"] {
+        padding: 10px;
+        font-size: 1rem;
+        border: 2px solid #5c6358;
+        border-radius: 8px;
+        background: #d9dad7;
+        color: #5c6358;
+      }
+      #modelUploadForm button,
+      #retrainButton {
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        background: #7cc639;
+        color: #1a1f16;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      #modelUploadForm button:hover,
+      #retrainButton:hover {
+        background: #6baf32;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124, 198, 57, 0.4);
+      }
+      .map-container {
+        width: 100%;
+        max-width: 600px;
+        background: #d9dad7;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-top: 20px;
+        animation: fadeInUp 1s ease-out;
+      }
+      .map-container h2 {
+        font-size: 1.8rem;
+        color: #7cc639;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      #map {
+        height: 400px;
+        width: 100%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <h1>Chatbot - Secure Monitor</h1>
+    <div class="chat-container">
+      <h2>Chatbot</h2>
+      <div id="chatbox"></div>
+      <div class="chat-input">
+        <input
+          id="chatInput"
+          type="text"
+          placeholder="Type 'report', 'exit', or 'blocked'"
+        />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+      <div class="loading" id="loading">Loading...</div>
+    </div>
+    <div class="blocked-ips-container">
+      <h2>Blocked IPs</h2>
+      <div id="blocked-ips-list"></div>
+    </div>
+    <div class="model-management-container">
+      <h2>Model Management</h2>
+      <form id="modelUploadForm" enctype="multipart/form-data">
+        <input type="file" name="model" accept=".pkl" />
+        <button type="submit">Upload Model</button>
+      </form>
+      <div id="model-metrics">
+        <h3>Model Performance</h3>
+        <p id="metrics">Loading metrics...</p>
+      </div>
+      <button id="retrainButton" onclick="retrainModel()">Retrain Model</button>
+    </div>
+    <div class="map-container">
+      <h2>Attack Locations</h2>
+      <div id="map"></div>
+    </div>
+    <a href="/logout" class="logout">Logout</a>
+
+    <script src="chatbot.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      let map = L.map("map").setView([0, 0], 2); // Default view
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
+      function updateMap(attacks) {
+        map.eachLayer((layer) => {
+          if (layer instanceof L.Marker) map.removeLayer(layer);
+        });
+        attacks.forEach((a) => {
+          if (a.latitude && a.longitude) {
+            L.marker([a.latitude, a.longitude])
+              .addTo(map)
+              .bindPopup(
+                `IP: ${a.ip}<br>Type: ${a.type}<br>Time: ${
+                  a.time
+                }<br>Details: ${a.details || "N/A"}`
+              );
+          }
+        });
+      }
+
+      window.onload = function () {
+        fetchModelMetrics();
+        fetch("http://localhost:8000/report", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        })
+          .then((response) => response.json())
+          .then((data) => updateMap(data.attacks));
+      };
+    </script>
+  </body>
+</html>

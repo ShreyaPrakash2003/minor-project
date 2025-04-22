@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Website Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+    
+        body {
+            background: linear-gradient(135deg, #000000, #7CC639); /* Black to muted lime green gradient */
+            color: #5C6358; /* Lighter olive green text */
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    
+        h1 {
+            font-size: 3rem;
+            color: #7CC639; /* Muted lime green */
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeInDown 1s ease-out;
+        }
+    
+        .container {
+            background: #D9DAD7; /* Softer light gray */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+    
+        #myForm {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+    
+        #myForm input[type="text"],
+        #myForm input[type="file"] {
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #5C6358; /* Lighter olive green border */
+            border-radius: 8px;
+            background: #D9DAD7; /* Softer light gray background */
+            color: #5C6358; /* Lighter olive green text */
+            transition: all 0.3s ease;
+        }
+    
+        #myForm input[type="text"]:focus,
+        #myForm input[type="file"]:focus {
+            outline: none;
+            border-color: #7CC639; /* Muted lime green on focus */
+            box-shadow: 0 0 8px rgba(124, 198, 57, 0.3);
+            transform: scale(1.02);
+        }
+    
+        #myForm input[type="file"] {
+            padding: 10px;
+            cursor: pointer;
+        }
+    
+        #myForm button {
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            background: #7CC639; /* Muted lime green button */
+            color: #1A1F16; /* Softer dark green text */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+    
+        #myForm button:hover {
+            background: #6BAF32; /* Slightly darker muted lime green on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 198, 57, 0.4);
+        }
+    
+        #message {
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #5C6358; /* Lighter olive green text */
+            background: #D9DAD7; /* Softer light gray */
+            padding: 10px;
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease-out;
+        }
+    
+        /* Animations remain unchanged */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    
+        /* Responsive Design remains unchanged */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .container { padding: 20px; max-width: 90%; }
+            #myForm input[type="text"],
+            #myForm input[type="file"],
+            #myForm button { font-size: 0.9rem; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Secure Website Monitor</h1>
+    <div class="container">
+        <form id="myForm">
+            <input type="text" name="input" placeholder="Enter something to test">
+            <input type="file" name="file" id="fileInput">
+            <button type="submit">Submit</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('myForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+    
+            const inputData = document.querySelector('input[name="input"]').value;
+            const fileInput = document.querySelector('input[name="file"]');
+            const messageDiv = document.getElementById('message');
+    
+            // Clear previous message
+            messageDiv.innerHTML = '';
+    
+            // Handle text input submission
+            if (inputData) {
+                try {
+                    const response = await fetch('/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ input: inputData })
+                    });
+    
+                    const data = await response.json();
+                    console.log('Text input response:', data); // Debug: Log the response
+    
+                    if (data.status === "blocked" || response.status === 403) {
+                        messageDiv.innerHTML = data.message; // Show "malicious input, ip blocked for 24 hours"
+                    } else if (data.status === "clean") {
+                        messageDiv.innerHTML = 'Input submitted';
+                    } else {
+                        messageDiv.innerHTML = `Error: ${data.message || 'Unknown error'}`;
+                    }
+                } catch (error) {
+                    console.error('Error submitting input:', error);
+                    messageDiv.innerHTML = `Error: ${error.message}`;
+                }
+            } else {
+                messageDiv.innerHTML = 'Please enter some text to analyze.';
+            }
+    
+            // Handle file upload
+            if (fileInput.files[0]) {
+                console.log('File selected:', fileInput.files[0]); // Debug: Log the selected file
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+    
+                try {
+                    console.log('Sending file to /upload...'); // Debug: Log before sending
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+    
+                    console.log('File upload response status:', response.status); // Debug: Log response status
+                    const data = await response.json();
+                    console.log('File upload response data:', data); // Debug: Log response data
+    
+                    if (data.status === 'blocked' || response.status === 403) {
+                        messageDiv.innerHTML += `<br>${data.message}`; // Show "malicious file detected, unable to upload"
+                    } else if (data.status === 'clean') {
+                        messageDiv.innerHTML += `<br>File is clean: ${data.details || 'No additional details'}`;
+                    } else if (data.status === 'attack_detected') {
+                        messageDiv.innerHTML += `<br>Malware detected: ${data.type} - ${data.details || 'No additional details'}`;
+                    } else {
+                        messageDiv.innerHTML += `<br>Error: ${data.message || 'Unknown error'}`;
+                    }
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                    messageDiv.innerHTML += `<br>Error: ${error.message}`;
+                }
+            } else if (!inputData) {
+                // If no text input and no file, show a message
+                messageDiv.innerHTML = 'Please enter text or select a file to upload.';
+            }
+        });
+    </script>
+    <!-- Existing Cloudflare script remains unchanged -->
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'924ef2feabf4bcd4',t:'MTc0Mjc0MzYwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>
